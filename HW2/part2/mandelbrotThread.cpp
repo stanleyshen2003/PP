@@ -14,7 +14,6 @@ typedef struct
     int numThreads;
     int totalPixels;
     int pixelsPerThread;
-    int ***xyValues;
 
 } WorkerArgs;
 
@@ -42,14 +41,16 @@ void mandelbrotSerial(
     int width, int height,
     int startRow, int endRow,
     int startCol, int endCol,
-    int maxIterations, int ***xyValues,
+    int maxIterations,
     int output[])
 {
+  float dx = (x1 - x0) / width;
+  float dy = (y1 - y0) / height;
 
   // first column
   for (int i = startCol; i < width; i++){
-    float x = xyValues[startRow][i][0];
-    float y = xyValues[startRow][i][1];
+    float x = x0 + i * dx;
+    float y = y0 + startRow * dy;
     int index = (startRow * width + i);
     output[index] = mandel(x, y, maxIterations);
   }
@@ -58,8 +59,8 @@ void mandelbrotSerial(
   {
     for (int i = 0; i < width; ++i)
     {
-      float x = xyValues[j][i][0];
-      float y = xyValues[j][i][1];
+      float x = x0 + i * dx;
+      float y = y0 + j * dy;
 
       int index = (j * width + i);
       output[index] = mandel(x, y, maxIterations);
@@ -67,8 +68,8 @@ void mandelbrotSerial(
   }
 
   for(int i = 0; i < endCol; i++){
-    float x = xyValues[endRow][i][0];
-    float y = xyValues[endRow][i][1];
+    float x = x0 + i * dx;
+    float y = y0 + endRow * dy;
     int index = (endRow * width + i);
     output[index] = mandel(x, y, maxIterations);
   }
@@ -89,8 +90,10 @@ void workerThreadStart(WorkerArgs *const args)
   // Of course, you can copy mandelbrotSerial() to this file and
   // modify it to pursue a better performance.
 
-  int start_pixel = args->threadId * args->pixelsPerThread;
-  int end_pixel = (args->threadId + 1) * args->pixelsPerThread;
+  int total_pixels = args->width * args->height;
+  int pixels_per_thread = total_pixels / args->numThreads;
+  int start_pixel = args->threadId * pixels_per_thread;
+  int end_pixel = (args->threadId + 1) * pixels_per_thread;
   int startRow = start_pixel / args->width;
   int startCol = start_pixel % args->width;
   int endRow = end_pixel / args->width;
@@ -100,7 +103,7 @@ void workerThreadStart(WorkerArgs *const args)
       endCol = 0;
   }
   // printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
-  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->xyValues, args->output);
+  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
 
 //
@@ -127,32 +130,6 @@ void mandelbrotThread(
 
     int total_pixels = width * height;
     int pixels_per_thread = total_pixels / numThreads;
-    float dx = (x1 - x0) / width;
-    float dy = (y1 - y0) / height;
-    int ***xyValues = new int**[height];
-    for (int i = 0; i < height; i++){
-        xyValues[i] = new int*[width];
-        for (int j = 0; j < width; j++){
-            xyValues[i][j] = new int[2];
-        }
-    }
-    xyValues[0][0][0] = x0;
-    xyValues[0][0][1] = y0;
-    for (int i = 1; i < width; i++){
-        xyValues[0][i][0] = xyValues[0][i-1][0] + dx;
-        xyValues[0][i][1] = y0;
-    }
-    for (int i = 1; i < height; i++){
-        xyValues[i][0][0] = x0;
-        xyValues[i][0][1] = xyValues[i-1][0][1] + dy;
-    }
-    for (int i = 1; i < height; i++){
-        for (int j = 1; j < width; j++){
-            xyValues[i][j][0] = xyValues[i][j-1][0] + dx;
-            xyValues[i][j][1] = xyValues[i-1][j][1] + dy;
-        }
-    }
-
     for (int i = 0; i < numThreads; i++)
     {
         // TODO FOR PP STUDENTS: You may or may not wish to modify
@@ -169,7 +146,7 @@ void mandelbrotThread(
         args[i].output = output;
         args[i].totalPixels = total_pixels;
         args[i].pixelsPerThread = pixels_per_thread;
-        args[i].xyValues = xyValues;
+
         args[i].threadId = i;
     }
 
