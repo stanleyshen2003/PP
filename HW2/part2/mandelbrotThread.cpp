@@ -96,7 +96,7 @@ void workerThreadStart(WorkerArgs *const args)
   int endCol = end_pixel % args->width;
   if (args->threadId == args->numThreads - 1){
       endRow = args->height;
-      endCol = args->width;
+      endCol = 0;
   }
   mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
