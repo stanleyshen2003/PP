@@ -36,16 +36,22 @@ static inline int mandel(float c_re, float c_im, int count)
 void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
-    int startRow, int totalRows,
+    int startRow, int endRow,
+    int startCol, int endCol,
     int maxIterations,
     int output[])
 {
   float dx = (x1 - x0) / width;
   float dy = (y1 - y0) / height;
 
-  int endRow = startRow + totalRows;
+  for (int i = startCol; i < width; i++){
+    float x = x0 + i * dx;
+    float y = y0 + startRow * dy;
+    int index = (startRow * width + i);
+    output[index] = mandel(x, y, maxIterations);
+  }
 
-  for (int j = startRow; j < endRow; j++)
+  for (int j = startRow + 1; j < endRow - 1; j++)
   {
     for (int i = 0; i < width; ++i)
     {
@@ -56,6 +62,13 @@ void mandelbrotSerial(
       output[index] = mandel(x, y, maxIterations);
     }
   }
+
+  for(int i = 0; i < endCol; i++){
+    float x = x0 + i * dx;
+    float y = y0 + (endRow - 1) * dy;
+    int index = ((endRow - 1) * width + i);
+    output[index] = mandel(x, y, maxIterations);
+  }
 }
 
 //
@@ -65,14 +78,27 @@ void mandelbrotSerial(
 void workerThreadStart(WorkerArgs *const args)
 {
 
-    // TODO FOR PP STUDENTS: Implement the body of the worker
-    // thread here. Each thread could make a call to mandelbrotSerial()
-    // to compute a part of the output image. For example, in a
-    // program that uses two threads, thread 0 could compute the top
-    // half of the image and thread 1 could compute the bottom half.
-    // Of course, you can copy mandelbrotSerial() to this file and
-    // modify it to pursue a better performance.
+  // TODO FOR PP STUDENTS: Implement the body of the worker
+  // thread here. Each thread could make a call to mandelbrotSerial()
+  // to compute a part of the output image. For example, in a
+  // program that uses two threads, thread 0 could compute the top
+  // half of the image and thread 1 could compute the bottom half.
+  // Of course, you can copy mandelbrotSerial() to this file and
+  // modify it to pursue a better performance.
 
+  int total_pixels = args->width * args->height;
+  int pixels_per_thread = total_pixels / args->numThreads;
+  int start_pixel = args->threadId * pixels_per_thread;
+  int end_pixel = (args->threadId + 1) * pixels_per_thread;
+  int startRow = start_pixel / args->width;
+  int startCol = start_pixel % args->width;
+  int endRow = end_pixel / args->width;
+  int endCol = end_pixel % args->width;
+  if (args->threadId == args->numThreads - 1){
+      endRow = args->height;
+      endCol = args->width;
+  }
+  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
 
 //
