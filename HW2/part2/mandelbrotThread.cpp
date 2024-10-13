@@ -99,7 +99,7 @@ void workerThreadStart(WorkerArgs *const args)
       endRow = args->height;
       endCol = 0;
   }
-  printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
+  // printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
   mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
 
@@ -115,7 +115,6 @@ void mandelbrotThread(
     int maxIterations, int output[])
 {
     static constexpr int MAX_THREADS = 32;
-    printf("Num threads: %d\n", numThreads);
     if (numThreads > MAX_THREADS)
     {
         fprintf(stderr, "Error: Max allowed threads is %d\n", MAX_THREADS);
