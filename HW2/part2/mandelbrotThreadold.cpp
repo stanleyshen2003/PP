@@ -38,22 +38,44 @@ static inline int mandel(float c_re, float c_im, int count)
   return i;
 }
 
-void mandelbrotRow(
+void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     float* xPos, float* yPos,
-    int width, int startRow,
+    int width, int height,
+    int startRow, int endRow,
+    int startCol, int endCol,
     int maxIterations,
     int output[])
 {
-  float x, y;
-  int index = startRow * width;
-  
-  for (int i = 0; i < width; ++i)
-  {
-    output[index] = mandel(xPos[i], yPos[startRow], maxIterations);
+
+  int index = startRow * width + startCol;
+
+  // first column
+  for (int i = startCol; i < width; i++){
+    float x = xPos[i];
+    float y = yPos[startRow];
+    output[index] = mandel(x, y, maxIterations);
     index++;
   }
-  
+
+  for (int j = startRow + 1; j < endRow; j++)
+  {
+    for (int i = 0; i < width; ++i)
+    {
+      float x = xPos[i];
+      float y = yPos[j];
+
+      output[index] = mandel(x, y, maxIterations);
+      index++;
+    }
+  }
+
+  for(int i = 0; i < endCol; i++){
+    float x = xPos[i];
+    float y = yPos[endRow];
+    output[index] = mandel(x, y, maxIterations);
+    index++;
+  }
 }
 
 //
@@ -71,8 +93,20 @@ void workerThreadStart(WorkerArgs *const args)
   // Of course, you can copy mandelbrotSerial() to this file and
   // modify it to pursue a better performance.
 
-  for (int i = args->threadId; i < args->height; i += args->numThreads)
-    mandelbrotRow(args->x0, args->y0, args->x1, args->y1, args->xPos, args->yPos, args->width, i, args->maxIterations, args->output);
+  int total_pixels = args->width * args->height;
+  int pixels_per_thread = total_pixels / args->numThreads;
+  int start_pixel = args->threadId * pixels_per_thread;
+  int end_pixel = (args->threadId + 1) * pixels_per_thread;
+  int startRow = start_pixel / args->width;
+  int startCol = start_pixel % args->width;
+  int endRow = end_pixel / args->width;
+  int endCol = end_pixel % args->width;
+  if (args->threadId == args->numThreads - 1){
+      endRow = args->height;
+      endCol = 0;
+  }
+  // printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
+  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->xPos, args->yPos, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
 
 //
