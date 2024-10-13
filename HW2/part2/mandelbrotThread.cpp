@@ -138,12 +138,10 @@ void mandelbrotThread(
     float dy = (y1 - y0) / height;
     float *xPos = new float[width];
     float *yPos = new float[height];
-    xPos[0] = x0;
-    yPos[0] = y0;
-    for (int i = 1; i < width; i++)
-        xPos[i] = xPos[i - 1] + dx;
-    for (int i = 1; i < height; i++)
-        yPos[i] = yPos[i - 1] + dy;
+    for (int i = 0; i < width; i++)
+        xPos[i] = x0 + i * dx;
+    for (int i = 0; i < height; i++)
+        yPos[i] = y0 + i * dy;
     
     for (int i = 0; i < numThreads; i++)
     {
