@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <thread>
+#include "CycleTimer.h"
 
 typedef struct
 {
@@ -93,6 +94,8 @@ void workerThreadStart(WorkerArgs *const args)
   // Of course, you can copy mandelbrotSerial() to this file and
   // modify it to pursue a better performance.
 
+  double startTime = CycleTimer::currentSeconds();
+
   int total_pixels = args->width * args->height;
   int pixels_per_thread = total_pixels / args->numThreads;
   int start_pixel = args->threadId * pixels_per_thread;
@@ -107,6 +110,9 @@ void workerThreadStart(WorkerArgs *const args)
   }
   // printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
   mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->xPos, args->yPos, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
+
+  double endTime = CycleTimer::currentSeconds();
+  printf("Thread %d: %.3f ms\n", args->threadId, (endTime - startTime) * 1000);
 }
 
 //

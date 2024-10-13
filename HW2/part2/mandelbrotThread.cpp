@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <thread>
 
+
 typedef struct
 {
     float x0, x1;
