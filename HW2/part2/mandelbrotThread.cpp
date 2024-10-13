@@ -14,6 +14,8 @@ typedef struct
     int numThreads;
     int totalPixels;
     int pixelsPerThread;
+    float* xPos;
+    float* yPos;
 
 } WorkerArgs;
 
@@ -38,40 +40,41 @@ static inline int mandel(float c_re, float c_im, int count)
 
 void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
+    float* xPos, float* yPos,
     int width, int height,
     int startRow, int endRow,
     int startCol, int endCol,
     int maxIterations,
     int output[])
 {
-  float dx = (x1 - x0) / width;
-  float dy = (y1 - y0) / height;
+
+  int index = startRow * width + startCol;
 
   // first column
   for (int i = startCol; i < width; i++){
-    float x = x0 + i * dx;
-    float y = y0 + startRow * dy;
-    int index = (startRow * width + i);
+    float x = xPos[i];
+    float y = yPos[startRow];
     output[index] = mandel(x, y, maxIterations);
+    index++;
   }
 
   for (int j = startRow + 1; j < endRow; j++)
   {
     for (int i = 0; i < width; ++i)
     {
-      float x = x0 + i * dx;
-      float y = y0 + j * dy;
+      float x = xPos[i];
+      float y = yPos[j];
 
-      int index = (j * width + i);
       output[index] = mandel(x, y, maxIterations);
+      index++;
     }
   }
 
   for(int i = 0; i < endCol; i++){
-    float x = x0 + i * dx;
-    float y = y0 + endRow * dy;
-    int index = (endRow * width + i);
+    float x = xPos[i];
+    float y = yPos[endRow];
     output[index] = mandel(x, y, maxIterations);
+    index++;
   }
 }
 
@@ -103,7 +106,7 @@ void workerThreadStart(WorkerArgs *const args)
       endCol = 0;
   }
   // printf("Thread %d: startRow: %d, endRow: %d, startCol: %d, endCol: %d\n", args->threadId, startRow, endRow, startCol, endCol);
-  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
+  mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->xPos, args->yPos, args->width, args->height, startRow, endRow, startCol, endCol, args->maxIterations, args->output);
 }
 
 //
@@ -130,6 +133,18 @@ void mandelbrotThread(
 
     int total_pixels = width * height;
     int pixels_per_thread = total_pixels / numThreads;
+
+    float dx = (x1 - x0) / width;
+    float dy = (y1 - y0) / height;
+    float *xPos = new float[width];
+    float *yPos = new float[height];
+    xPos[0] = x0;
+    yPos[0] = y0;
+    for (int i = 1; i < width; i++)
+        xPos[i] = xPos[i - 1] + dx;
+    for (int i = 1; i < height; i++)
+        yPos[i] = yPos[i - 1] + dy;
+    
     for (int i = 0; i < numThreads; i++)
     {
         // TODO FOR PP STUDENTS: You may or may not wish to modify
@@ -146,7 +161,8 @@ void mandelbrotThread(
         args[i].output = output;
         args[i].totalPixels = total_pixels;
         args[i].pixelsPerThread = pixels_per_thread;
-
+        args[i].xPos = xPos;
+        args[i].yPos = yPos;
         args[i].threadId = i;
     }
 
