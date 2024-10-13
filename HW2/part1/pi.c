@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Final PI estimation
-    double pi = 4 * number_in_circle / ((double)total_tosses);
+    double pi = 4 * (number_in_circle / (double)total_tosses);
     printf("%f\n", pi);
 
     // Clean up
