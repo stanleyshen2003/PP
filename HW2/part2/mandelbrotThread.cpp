@@ -45,7 +45,6 @@ void mandelbrotRow(
     int maxIterations,
     int output[])
 {
-  float x, y;
   int index = startRow * width;
   
   for (int i = 0; i < width; ++i)
@@ -71,7 +70,7 @@ void workerThreadStart(WorkerArgs *const args)
   // Of course, you can copy mandelbrotSerial() to this file and
   // modify it to pursue a better performance.
 
-  for (int i = args->threadId; i < args->height; i += args->numThreads)
+  for (unsigned int i = args->threadId; i < args->height; i += args->numThreads)
     mandelbrotRow(args->x0, args->y0, args->x1, args->y1, args->xPos, args->yPos, args->width, i, args->maxIterations, args->output);
 }
 
