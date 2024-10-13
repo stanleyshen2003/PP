@@ -23,16 +23,16 @@ static inline int mandel(float c_re, float c_im, int count)
 {
   float z_re = c_re, z_im = c_im;
   int i;
-  float z_req, z_imq;
+  float z_req, z_imq, new_re, new_im;
   for (i = 0; i < count; ++i)
   {
-    float z_req = z_re * z_re;
-    float z_imq = z_im * z_im;
+    z_req = z_re * z_re;
+    z_imq = z_im * z_im;
     if (z_req + z_imq > 4.f)
         return i;
 
-    float new_re = z_req - z_imq;
-    float new_im = 2.f * z_re * z_im;
+    new_re = z_req - z_imq;
+    new_im = 2.f * z_re * z_im;
     z_re = c_re + new_re;
     z_im = c_im + new_im;
   }
