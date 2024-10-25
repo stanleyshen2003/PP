@@ -15,10 +15,10 @@ OBJS = cg_impl.o \
        ${COMMON}/wtime.o
 
 ${PROGRAMNAME}: config ${PROGRAMNAME}.o ${OBJS}
-	${CLINK} ${CLINKFLAGS} -Wl,--allow-multiple-definition -pg -o ${PROGRAMNAME} ${PROGRAMNAME}.o ${OBJS} ${C_LIB}
+	${CLINK} ${CLINKFLAGS} -Wl,--allow-multiple-definition -g -o ${PROGRAMNAME} ${PROGRAMNAME}.o ${OBJS} ${C_LIB}
 
 grade: config grade.o ${OBJS}
-	${CLINK} ${CLINKFLAGS} -Wl,--allow-multiple-definition -pg -o cg_grader grade.o ${OBJS} ref_cg.a def_cg.a ${C_LIB}
+	${CLINK} ${CLINKFLAGS} -Wl,--allow-multiple-definition -g -o cg_grader grade.o ${OBJS} ref_cg.a def_cg.a ${C_LIB}
 
 .c.o:
 	${CCOMPILE} $< -D${DATASIZE}
