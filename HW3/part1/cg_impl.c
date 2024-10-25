@@ -27,40 +27,9 @@ double get_rho(double r[], int lastcol, int firstcol){
     return rho;
 }
 
-
-
-
-void conj_grad(int colidx[],
-               int rowstr[],
-               double x[],
-               double z[],
-               double a[],
-               double p[],
-               double q[],
-               double r[],
-               double *rnorm)
-{
-    int j, k;
-    int cgit, cgitmax = 25;
-    double d, sum, rho, rho0, alpha, beta;
-
-    omp_set_num_threads(6);
-    //---------------------------------------------------------------------
-    // Initialize the CG algorithm:
-    //---------------------------------------------------------------------
-    init_cg(q, z, r, p, x);
-
-    //---------------------------------------------------------------------
-    // rho = r.r
-    // Now, obtain the norm of r: First, sum squares of r elements locally...
-    //---------------------------------------------------------------------
-    rho = get_rho(r, lastcol, firstcol);
-
-    //---------------------------------------------------------------------
-    //---->
-    // The conj grad iteration loop
-    //---->
-    //---------------------------------------------------------------------
+void iterate_cg(double rho, double a[], double p[], double q[], double r[], double z[], double x[], int colidx[], int rowstr[], int firstrow, int lastrow, int firstcol, int lastcol){
+    int j, cgit, cgitmax = 25, k;
+    double alpha, beta, rho0, d, sum;
     for (cgit = 1; cgit <= cgitmax; cgit++)
     {
         //---------------------------------------------------------------------
@@ -88,6 +57,7 @@ void conj_grad(int colidx[],
         // Obtain p.q
         //---------------------------------------------------------------------
         d = 0.0;
+        #pragma omp parallel for reduction(+:d)
         for (j = 0; j < lastcol - firstcol + 1; j++)
         {
             d = d + p[j] * q[j];
@@ -108,6 +78,7 @@ void conj_grad(int colidx[],
         // and    r = r - alpha*q
         //---------------------------------------------------------------------
         rho = 0.0;
+        #pragma omp parallel for
         for (j = 0; j < lastcol - firstcol + 1; j++)
         {
             z[j] = z[j] + alpha * p[j];
@@ -118,6 +89,7 @@ void conj_grad(int colidx[],
         // rho = r.r
         // Now, obtain the norm of r: First, sum squares of r elements locally...
         //---------------------------------------------------------------------
+        #pragma omp parallel for reduction(+:rho)
         for (j = 0; j < lastcol - firstcol + 1; j++)
         {
             rho = rho + r[j] * r[j];
@@ -131,11 +103,49 @@ void conj_grad(int colidx[],
         //---------------------------------------------------------------------
         // p = r + beta*p
         //---------------------------------------------------------------------
+        #pragma omp parallel for
         for (j = 0; j < lastcol - firstcol + 1; j++)
         {
             p[j] = r[j] + beta * p[j];
         }
     } // end of do cgit=1,cgitmax
+
+
+}
+
+
+
+void conj_grad(int colidx[],
+               int rowstr[],
+               double x[],
+               double z[],
+               double a[],
+               double p[],
+               double q[],
+               double r[],
+               double *rnorm)
+{
+    int j, k;
+    int cgit, cgitmax = 25;
+    double d, sum, rho, rho0, alpha, beta;
+
+    //---------------------------------------------------------------------
+    // Initialize the CG algorithm:
+    //---------------------------------------------------------------------
+    init_cg(q, z, r, p, x);
+
+    //---------------------------------------------------------------------
+    // rho = r.r
+    // Now, obtain the norm of r: First, sum squares of r elements locally...
+    //---------------------------------------------------------------------
+    rho = get_rho(r, lastcol, firstcol);
+
+    //---------------------------------------------------------------------
+    //---->
+    // The conj grad iteration loop
+    //---->
+    //---------------------------------------------------------------------
+    iterate_cg(rho, a, p, q, r, z, x, colidx, rowstr, firstrow, lastrow, firstcol, lastcol);
 
     //---------------------------------------------------------------------
     // Compute residual norm explicitly:  ||r|| = ||x - A.z||
