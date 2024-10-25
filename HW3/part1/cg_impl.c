@@ -572,26 +572,23 @@ void init(double *zeta)
     //      Shift the col index vals from actual (firstcol --> lastcol )
     //      to local, i.e., (0 --> lastcol-firstcol)
     //---------------------------------------------------------------------
-    #pragma omp parallel {
-        for (j = 0; j < lastrow - firstrow + 1; j++)
-        {
-            for (k = rowstr[j]; k < rowstr[j + 1]; k++)
-            {
+    #pragma omp parallel
+    {
+        for (j = 0; j < lastrow - firstrow + 1; j++) {
+            for (k = rowstr[j]; k < rowstr[j + 1]; k++) {
                 colidx[k] = colidx[k] - firstcol;
             }
         }
 
-        //---------------------------------------------------------------------
-        // set starting vector to (1, 1, .... 1)
-        //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
+    // set starting vector to (1, 1, .... 1)
+    //---------------------------------------------------------------------
         #pragma omp for
-        for (i = 0; i < NA + 1; i++)
-        {
+        for (i = 0; i < NA + 1; i++) {
             x[i] = 1.0;
         }
         #pragma omp for
-        for (j = 0; j < lastcol - firstcol + 1; j++)
-        {
+        for (j = 0; j < lastcol - firstcol + 1; j++) {
             q[j] = 0.0;
             z[j] = 0.0;
             r[j] = 0.0;
