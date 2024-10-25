@@ -43,6 +43,7 @@ void iterate_cg(double rho, double a[], double p[], double q[], double r[], doub
         //       unrolled-by-two version is some 10% faster.
         //       The unrolled-by-8 version below is significantly faster
         //       on the Cray t3d - overall speed of code is 1.5 times faster.
+        #pragma omp parallel for ptivate(sum)
         for (j = 0; j < lastrow - firstrow + 1; j++)
         {
             sum = 0.0;
@@ -153,6 +154,7 @@ void conj_grad(int colidx[],
     // The partition submatrix-vector multiply
     //---------------------------------------------------------------------
     sum = 0.0;
+    #pragma omp parallel for
     for (j = 0; j < lastrow - firstrow + 1; j++)
     {
         d = 0.0;
@@ -166,6 +168,7 @@ void conj_grad(int colidx[],
     //---------------------------------------------------------------------
     // At this point, r contains A.z
     //---------------------------------------------------------------------
+    #pragma omp parallel for reduction(+:sum)
     for (j = 0; j < lastcol - firstcol + 1; j++)
     {
         d = x[j] - r[j];
@@ -294,6 +297,7 @@ void sparse(double a[],
     //---------------------------------------------------------------------
     // ...count the number of triples in each row
     //---------------------------------------------------------------------
+    #pragma omp parallel for
     for (j = 0; j < nrows + 1; j++)
     {
         rowstr[j] = 0;
@@ -441,6 +445,7 @@ void sparse(double a[],
             nza = nza + 1;
         }
     }
+    #pragma omp parallel for
     for (j = 1; j < nrows + 1; j++)
     {
         rowstr[j] = rowstr[j] - nzloc[j - 1];
@@ -567,27 +572,31 @@ void init(double *zeta)
     //      Shift the col index vals from actual (firstcol --> lastcol )
     //      to local, i.e., (0 --> lastcol-firstcol)
     //---------------------------------------------------------------------
-    for (j = 0; j < lastrow - firstrow + 1; j++)
-    {
-        for (k = rowstr[j]; k < rowstr[j + 1]; k++)
+    #pragma omp parallel {
+        for (j = 0; j < lastrow - firstrow + 1; j++)
         {
-            colidx[k] = colidx[k] - firstcol;
+            for (k = rowstr[j]; k < rowstr[j + 1]; k++)
+            {
+                colidx[k] = colidx[k] - firstcol;
+            }
         }
-    }
 
-    //---------------------------------------------------------------------
-    // set starting vector to (1, 1, .... 1)
-    //---------------------------------------------------------------------
-    for (i = 0; i < NA + 1; i++)
-    {
-        x[i] = 1.0;
-    }
-    for (j = 0; j < lastcol - firstcol + 1; j++)
-    {
-        q[j] = 0.0;
-        z[j] = 0.0;
-        r[j] = 0.0;
-        p[j] = 0.0;
+        //---------------------------------------------------------------------
+        // set starting vector to (1, 1, .... 1)
+        //---------------------------------------------------------------------
+        #pragma omp for
+        for (i = 0; i < NA + 1; i++)
+        {
+            x[i] = 1.0;
+        }
+        #pragma omp for
+        for (j = 0; j < lastcol - firstcol + 1; j++)
+        {
+            q[j] = 0.0;
+            z[j] = 0.0;
+            r[j] = 0.0;
+            p[j] = 0.0;
+        }
     }
 }
 
