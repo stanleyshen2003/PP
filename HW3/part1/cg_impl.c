@@ -4,7 +4,7 @@
 // Floaging point arrays here are named as in spec discussion of
 // CG algorithm
 //---------------------------------------------------------------------
-void init(double q[], double z[], double r[], double p[], double x[]){
+void init_cg(double q[], double z[], double r[], double p[], double x[]){
     int j;
     #pragma omp parallel for
     for (j = 0; j < naa + 1; j++)
@@ -48,7 +48,7 @@ void conj_grad(int colidx[],
     //---------------------------------------------------------------------
     // Initialize the CG algorithm:
     //---------------------------------------------------------------------
-    init(q, z, r, p, x);
+    init_cg(q, z, r, p, x);
 
     //---------------------------------------------------------------------
     // rho = r.r
