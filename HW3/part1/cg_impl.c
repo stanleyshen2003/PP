@@ -1,8 +1,35 @@
 #include "cg_impl.h"
+#include <omp.h>
 //---------------------------------------------------------------------
 // Floaging point arrays here are named as in spec discussion of
 // CG algorithm
 //---------------------------------------------------------------------
+void init(double q[], double z[], double r[], double p[], double x[]){
+    int j;
+    #pragma omp parallel for
+    for (j = 0; j < naa + 1; j++)
+    {
+        q[j] = 0.0;
+        z[j] = 0.0;
+        r[j] = x[j];
+        p[j] = x[j];
+    }
+}
+
+double get_rho(double r[], int lastcol, int firstcol){
+    double rho = 0.0;
+    int j;
+    #pragma omp parallel for reduction(+:rho)
+    for (j = 0; j < lastcol - firstcol + 1; j++)
+    {
+        rho = rho + r[j] * r[j];
+    }
+    return rho;
+}
+
+
+
+
 void conj_grad(int colidx[],
                int rowstr[],
                double x[],
@@ -17,27 +44,17 @@ void conj_grad(int colidx[],
     int cgit, cgitmax = 25;
     double d, sum, rho, rho0, alpha, beta;
 
-    rho = 0.0;
-
+    omp_set_num_threads(6);
     //---------------------------------------------------------------------
     // Initialize the CG algorithm:
     //---------------------------------------------------------------------
-    for (j = 0; j < naa + 1; j++)
-    {
-        q[j] = 0.0;
-        z[j] = 0.0;
-        r[j] = x[j];
-        p[j] = r[j];
-    }
+    init(q, z, r, p, x);
 
     //---------------------------------------------------------------------
     // rho = r.r
     // Now, obtain the norm of r: First, sum squares of r elements locally...
     //---------------------------------------------------------------------
-    for (j = 0; j < lastcol - firstcol + 1; j++)
-    {
-        rho = rho + r[j] * r[j];
-    }
+    rho = get_rho(r, lastcol, firstcol);
 
     //---------------------------------------------------------------------
     //---->
