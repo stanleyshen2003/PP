@@ -41,6 +41,7 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
   */
   double converge_score = 10000;
   double *score_new = (double *)malloc(numNodes * sizeof(double));
+  double sum;
   while (converge_score > convergence){
     #pragma omp parallel
     {
@@ -65,7 +66,7 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
         score_new[i] = (damping * score_new[i]) + (1.0 - damping) / numNodes;
       }
     
-      double sum = 0;
+      sum = 0;
 
       #pragma omp for reduction(+: sum)
       for (int i = 0; i < numNodes; i++)
