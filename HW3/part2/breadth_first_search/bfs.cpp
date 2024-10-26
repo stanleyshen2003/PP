@@ -123,6 +123,29 @@ void bfs_top_down(Graph graph, solution *sol)
     }
 }
 
+bool bfs_bottom_up_step(Graph g, int last_index, solution *sol){
+    bool done = true;
+    int new_index = last_index + 1;
+    #pragma omp parallel for schedule(dynamic, 1024)
+    for (int i = 0; i < g->num_nodes; i++) {
+        if (sol->distances[i] == NOT_VISITED_MARKER) {
+            int start_edge = g->incoming_starts[i];
+            int end_edge = (i == g->num_nodes - 1)
+                           ? g->num_edges
+                           : g->incoming_starts[i + 1];
+            for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
+                int incoming = g->incoming_edges[neighbor];
+                if (sol->distances[incoming] == last_index) {
+                    sol->distances[i] = new_index;
+                    done = false;
+                    break;
+                }
+            }
+        }
+    }
+    return done;
+}
+
 void bfs_bottom_up(Graph graph, solution *sol)
 {
     // For PP students:
@@ -136,6 +159,19 @@ void bfs_bottom_up(Graph graph, solution *sol)
     // As was done in the top-down case, you may wish to organize your
     // code by creating subroutine bottom_up_step() that is called in
     // each step of the BFS process.
+    #pragma omp parallel for
+    for (int i = 0; i < graph->num_nodes; i++)
+        sol->distances[i] = NOT_VISITED_MARKER;
+    sol->distances[ROOT_NODE_ID] = 0;
+    int index = 0;
+    bool done = false;
+
+    while (!done) {
+        done = bfs_bottom_up_step(graph, index, sol);
+        index++;
+    }
+
+
 }
 
 void bfs_hybrid(Graph graph, solution *sol)
