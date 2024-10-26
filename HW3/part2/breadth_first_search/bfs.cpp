@@ -216,6 +216,7 @@ void bfs_hybrid(Graph graph, solution *sol)
         frontier = new_frontier;
         new_frontier = tmp;
         index++;
+        count += frontier->count;
     }
 
     bool done = false;
