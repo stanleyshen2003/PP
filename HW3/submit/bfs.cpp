@@ -121,6 +121,8 @@ void bfs_top_down(Graph graph, solution *sol)
         frontier = new_frontier;
         new_frontier = tmp;
     }
+    free(frontier->vertices);
+    free(new_frontier->vertices);
 }
 
 bool bfs_bottom_up_step(Graph g, int last_index, solution *sol){
@@ -225,6 +227,9 @@ void bfs_hybrid(Graph graph, solution *sol)
         done = bfs_bottom_up_step(graph, index, sol);
         index++;
     }
+
+    free(frontier->vertices);
+    free(new_frontier->vertices);
 
 
 }
