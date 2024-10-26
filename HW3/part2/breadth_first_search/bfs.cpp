@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <omp.h>
 #include <atomic>
-#include <vector>
 
 #include "../common/CycleTimer.h"
 #include "../common/graph.h"
@@ -29,46 +28,43 @@ void vertex_set_init(vertex_set *list, int count)
 // Take one step of "top-down" BFS.  For each vertex on the frontier,
 // follow all outgoing edges, and add all neighboring vertices to the
 // new_frontier.
-void top_down_step(Graph g, vertex_set *frontier, vertex_set *new_frontier, int *distances) {
-    int num_threads = omp_get_max_threads();
-    int local_counts[num_threads];
-    std::vector<int> local_new_frontier[num_threads];
-
-    // Initialize local counters for each thread
+void top_down_step(
+    Graph g,
+    vertex_set *frontier,
+    vertex_set *new_frontier,
+    int *distances)
+{
     #pragma omp parallel
+    for (int i = 0; i < frontier->count; i++)
     {
-        int tid = omp_get_thread_num();
-        local_counts[tid] = 0;
 
-        #pragma omp for schedule(dynamic)
-        for (int i = 0; i < frontier->count; i++) {
-            int node = frontier->vertices[i];
-            int start_edge = g->outgoing_starts[node];
-            int end_edge = (node == g->num_nodes - 1) ? g->num_edges : g->outgoing_starts[node + 1];
+        int node = frontier->vertices[i];
 
-            // Attempt to add all neighbors to the new frontier
-            for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
-                int outgoing = g->outgoing_edges[neighbor];
+        int start_edge = g->outgoing_starts[node];
+        int end_edge = (node == g->num_nodes - 1)
+                           ? g->num_edges
+                           : g->outgoing_starts[node + 1];
 
-                if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
-                    // Use thread-local buffers to store new frontier nodes
-                    local_new_frontier[tid].push_back(outgoing);
-                    local_counts[tid]++;
-                }
+        // attempt to add all neighbors to the new frontier
+        #pragma omp for schedule(static) 
+        for (int neighbor = start_edge; neighbor < end_edge; neighbor++)
+        {
+            int outgoing = g->outgoing_edges[neighbor];
+
+            if (distances[outgoing] == NOT_VISITED_MARKER)
+            {
+                distances[outgoing] = distances[node] + 1;
+
+                int index = __sync_fetch_and_add(&new_frontier->count, 1);
+                new_frontier->vertices[index] = outgoing;
             }
+            // if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
+            //     // If the swap was successful, this thread was the first to visit this node
+            //     int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
+            //     new_frontier->vertices[index] = outgoing;
+            // }
         }
     }
-
-    // Merge thread-local new frontier buffers into the main new frontier
-    int total_count = 0;
-    for (int tid = 0; tid < num_threads; tid++) {
-        int offset = total_count;
-        total_count += local_counts[tid];
-        for (int j = 0; j < local_counts[tid]; j++) {
-            new_frontier->vertices[offset + j] = local_new_frontier[tid][j];
-        }
-    }
-    new_frontier->count = total_count;
 }
 
 // Implements top-down BFS.
