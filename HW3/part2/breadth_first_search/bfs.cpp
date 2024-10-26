@@ -180,4 +180,50 @@ void bfs_hybrid(Graph graph, solution *sol)
     //
     // You will need to implement the "hybrid" BFS here as
     // described in the handout.
+    int hybrid_parameter = 2;
+
+
+    vertex_set list1;
+    vertex_set list2;
+    vertex_set_init(&list1, graph->num_nodes);
+    vertex_set_init(&list2, graph->num_nodes);
+
+    vertex_set *frontier = &list1;
+    vertex_set *new_frontier = &list2;
+
+    // initialize all nodes to NOT_VISITED
+    #pragma omp parallel for
+    for (int i = 0; i < graph->num_nodes; i++)
+        sol->distances[i] = NOT_VISITED_MARKER;
+
+    // setup frontier with the root node
+    frontier->vertices[frontier->count++] = ROOT_NODE_ID;
+    sol->distances[ROOT_NODE_ID] = 0;
+
+    int index = 0;
+    int total_nodes = graph->num_nodes;
+    int count = 0;
+
+    while (count < total_nodes / hybrid_parameter)
+    {
+
+        vertex_set_clear(new_frontier);
+
+        top_down_step(graph, frontier, new_frontier, sol->distances);
+
+        // swap pointers
+        vertex_set *tmp = frontier;
+        frontier = new_frontier;
+        new_frontier = tmp;
+        index++;
+    }
+
+    bool done = false;
+
+    while (!done) {
+        done = bfs_bottom_up_step(graph, index, sol);
+        index++;
+    }
+
+
 }
