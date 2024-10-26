@@ -54,8 +54,7 @@ void top_down_step(
             {
                 distances[outgoing] = distances[node] + 1;
                 
-                #pragma omp atomic
-                int index = new_frontier->count++;
+                int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
                 new_frontier->vertices[index] = outgoing;
             }
             // if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
