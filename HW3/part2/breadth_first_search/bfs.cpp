@@ -36,7 +36,7 @@ void top_down_step(
 {
     std::vector<int> local_frontier[omp_get_max_threads()];
     int now_distance = distances[frontier->vertices[0]] + 1;
-    #pragma omp parallel for schedule(dynamic, 3), shared(frontier, new_frontier, distances)
+    #pragma omp parallel for schedule(static), shared(frontier, new_frontier, distances)
     for (int i = 0; i < frontier->count; i++)
     {
 
