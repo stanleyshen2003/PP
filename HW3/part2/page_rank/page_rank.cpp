@@ -23,6 +23,7 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
 
   int numNodes = num_nodes(g);
   double equal_prob = 1.0 / numNodes;
+  #pragma omp parallel for
   for (int i = 0; i < numNodes; ++i)
   {
     solution[i] = equal_prob;
@@ -41,44 +42,62 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
   double converge_score = 10000;
   double *score_new = (double *)malloc(numNodes * sizeof(double));
   while (converge_score > convergence){
-    for (int i = 0; i < numNodes; ++i)
+    #pragma omp parallel
     {
-      score_new[i] = 0;
-    }
-    for (int i = 0; i < numNodes; ++i)
-    {
-      for (const Vertex *j = incoming_begin(g, i); j != incoming_end(g, i); j++)
+      #pragma omp for
+      for (int i = 0; i < numNodes; ++i)
       {
-        score_new[i] += solution[*j] / outgoing_size(g, *j);
+        score_new[i] = 0;
       }
-    }
-    for (int i = 0; i < numNodes; ++i)
-    {
-      score_new[i] = (damping * score_new[i]) + (1.0 - damping) / numNodes;
-    }
+
+      #pragma omp for
+      for (int i = 0; i < numNodes; ++i)
+      {
+        for (const Vertex *j = incoming_begin(g, i); j != incoming_end(g, i); j++)
+        {
+          score_new[i] += solution[*j] / outgoing_size(g, *j);
+        }
+      }
+
+      #pragma omp for
+      for (int i = 0; i < numNodes; ++i)
+      {
+        score_new[i] = (damping * score_new[i]) + (1.0 - damping) / numNodes;
+      }
     
-    double sum = 0;
-    for (int i = 0; i < numNodes; i++)
-    {
-      if (outgoing_size(g, i) == 0)
+      double sum = 0;
+
+      #pragma omp for reduction(+: sum)
+      for (int i = 0; i < numNodes; i++)
       {
-        sum += damping * solution[i] / numNodes;
+        if (outgoing_size(g, i) == 0)
+        {
+          sum += damping * solution[i] / numNodes;
+        }
       }
-    }
-    for (int i = 0; i < numNodes; i++)
-    {
-      score_new[i] += sum;
-    }
-    converge_score = 0;
-    for (int i = 0; i < numNodes; i++)
-    {
-      converge_score += abs(score_new[i] - solution[i]);
-    }
-    for (int i = 0; i < numNodes; i++)
-    {
-      solution[i] = score_new[i];
+
+      #pragma omp for
+      for (int i = 0; i < numNodes; i++)
+      {
+        score_new[i] += sum;
+      }
+
+      converge_score = 0;
+      #pragma omp for reduction(+: converge_score)
+      for (int i = 0; i < numNodes; i++)
+      {
+        converge_score += abs(score_new[i] - solution[i]);
+      }
+
+      #pragma omp for
+      for (int i = 0; i < numNodes; i++)
+      {
+        solution[i] = score_new[i];
+      }
     }
   }
+
+  free(score_new);
   
 
   /*
