@@ -29,31 +29,76 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
   }
 
   /*
-     For PP students: Implement the page rank algorithm here.  You
-     are expected to parallelize the algorithm using openMP.  Your
-     solution may need to allocate (and free) temporary arrays.
+    For PP students: Implement the page rank algorithm here.  You
+    are expected to parallelize the algorithm using openMP.  Your
+    solution may need to allocate (and free) temporary arrays.
 
-     Basic page rank pseudocode is provided below to get you started:
+    Basic page rank pseudocode is provided below to get you started:
 
-     // initialization: see example code above
-     score_old[vi] = 1/numNodes;
+    // initialization: see example code above
+    score_old[vi] = 1/numNodes;
+  */
+  double converge_score = 10000;
+  double *score_new = (double *)malloc(numNodes * sizeof(double));
+  while (converge_score > convergence){
+    for (int i = 0; i < numNodes; ++i)
+    {
+      score_new[i] = 0;
+    }
+    for (int i = 0; i < numNodes; ++i)
+    {
+      for (const Vertex *j = incoming_begin(g, i); j != incoming_end(g, i); j++)
+      {
+        score_new[i] += solution[*j] / outgoing_size(g, *j);
+      }
+    }
+    for (int i = 0; i < numNodes; ++i)
+    {
+      score_new[i] = (damping * score_new[i]) + (1.0 - damping) / numNodes;
+    }
+    
+    double sum = 0;
+    for (int i = 0; i < numNodes; i++)
+    {
+      if (outgoing_size(g, i) == 0)
+      {
+        sum += damping * solution[i] / numNodes;
+      }
+    }
+    for (int i = 0; i < numNodes; i++)
+    {
+      score_new[i] += sum;
+    }
+    converge_score = 0;
+    for (int i = 0; i < numNodes; i++)
+    {
+      converge_score += abs(score_new[i] - solution[i]);
+    }
+    for (int i = 0; i < numNodes; i++)
+    {
+      solution[i] = score_new[i];
+    }
+  }
+  
 
-     while (!converged) {
+  /*
+    while (!converged) {
 
-       // compute score_new[vi] for all nodes vi:
-       score_new[vi] = sum over all nodes vj reachable from incoming edges
+      // compute score_new[vi] for all nodes vi:
+      score_new[vi] = sum over all nodes vj reachable from incoming edges
                           { score_old[vj] / number of edges leaving vj  }
-       score_new[vi] = (damping * score_new[vi]) + (1.0-damping) / numNodes;
+      score_new[vi] = (damping * score_new[vi]) + (1.0-damping) / numNodes;
 
-       score_new[vi] += sum over all nodes v in graph with no outgoing edges
+      score_new[vi] += sum over all nodes v in graph with no outgoing edges
                           { damping * score_old[v] / numNodes }
 
-       // compute how much per-node scores have changed
-       // quit once algorithm has converged
+      // compute how much per-node scores have changed
+      // quit once algorithm has converged
 
-       global_diff = sum over all nodes vi { abs(score_new[vi] - score_old[vi]) };
-       converged = (global_diff < convergence)
-     }
+      global_diff = sum over all nodes vi { abs(score_new[vi] - score_old[vi]) };
+      converged = (global_diff < convergence)
+    }
 
-   */
+  */
+
 }
