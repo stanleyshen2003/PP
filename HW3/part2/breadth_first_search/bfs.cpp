@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cstddef>
 #include <omp.h>
+#include <atomic>
 
 #include "../common/CycleTimer.h"
 #include "../common/graph.h"
@@ -33,6 +34,7 @@ void top_down_step(
     vertex_set *new_frontier,
     int *distances)
 {
+    #pragma omp parallel for
     for (int i = 0; i < frontier->count; i++)
     {
 
@@ -52,6 +54,11 @@ void top_down_step(
             {
                 distances[outgoing] = distances[node] + 1;
                 int index = new_frontier->count++;
+                new_frontier->vertices[index] = outgoing;
+            }
+            if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
+                // If the swap was successful, this thread was the first to visit this node
+                int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
                 new_frontier->vertices[index] = outgoing;
             }
         }
