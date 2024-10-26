@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <omp.h>
 #include <atomic>
-
+#include <vector>
 #include "../common/CycleTimer.h"
 #include "../common/graph.h"
 
@@ -34,7 +34,9 @@ void top_down_step(
     vertex_set *new_frontier,
     int *distances)
 {
-    #pragma omp parallel for schedule(dynamic, 2), shared(frontier, new_frontier, distances)
+    std::vector<int> local_frontier[omp_get_max_threads()];
+    int now_distance = distances[frontier->vertices[0]] + 1;
+    #pragma omp parallel for schedule(dynamic, 3), shared(frontier, new_frontier, distances)
     for (int i = 0; i < frontier->count; i++)
     {
 
@@ -52,16 +54,24 @@ void top_down_step(
 
             if (distances[outgoing] == NOT_VISITED_MARKER)
             {
-                distances[outgoing] = distances[node] + 1;
-                
-                int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
-                new_frontier->vertices[index] = outgoing;
+                distances[outgoing] = now_distance;
+                local_frontier[omp_get_thread_num()].push_back(outgoing);
+                // int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
+                // new_frontier->vertices[index] = outgoing;
             }
             // if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
             //     // If the swap was successful, this thread was the first to visit this node
             //     int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
             //     new_frontier->vertices[index] = outgoing;
             // }
+        }
+    }
+    int index;
+    for (int i = 0; i < omp_get_max_threads(); i++) {
+        for (int j : local_frontier[i])
+        {
+            index = new_frontier->count++;
+            new_frontier->vertices[index] = j;
         }
     }
 }
