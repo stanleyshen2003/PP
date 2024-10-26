@@ -50,12 +50,12 @@ void top_down_step(
         {
             int outgoing = g->outgoing_edges[neighbor];
 
-            if (distances[outgoing] == NOT_VISITED_MARKER)
-            {
-                distances[outgoing] = distances[node] + 1;
-                int index = new_frontier->count++;
-                new_frontier->vertices[index] = outgoing;
-            }
+            // if (distances[outgoing] == NOT_VISITED_MARKER)
+            // {
+            //     distances[outgoing] = distances[node] + 1;
+            //     int index = new_frontier->count++;
+            //     new_frontier->vertices[index] = outgoing;
+            // }
             if (__sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
                 // If the swap was successful, this thread was the first to visit this node
                 int index = __sync_fetch_and_add(&new_frontier->count, 1); // Atomically increment count
