@@ -34,7 +34,7 @@ void top_down_step(
     vertex_set *new_frontier,
     int *distances)
 {
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(static), shared(frontier, new_frontier, distances)
     for (int i = 0; i < frontier->count; i++)
     {
 
