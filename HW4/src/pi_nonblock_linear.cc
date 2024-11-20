@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     {
         // TODO: non-blocking MPI communication.
         // Use MPI_Irecv, MPI_Wait or MPI_Waitall.
-        MPI_Request requests[];
+        MPI_Request* requests;
         requests = malloc((world_size - 1) * sizeof(MPI_Request));
         long long int *local_count = (long long int *)malloc((world_size - 1) * sizeof(long long int));
 
