@@ -19,13 +19,6 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     MPI_Win win;
-    long long int *total_count;
-    MPI_Win_allocate(sizeof(long long int), sizeof(long long int), MPI_INFO_NULL, MPI_COMM_WORLD, total_count, &win);
-    if (world_rank == 0) {
-        *total_count = 0;
-    }
-
-    MPI_Win_fence(0, win);
 
     // TODO: MPI init
     
@@ -45,33 +38,58 @@ int main(int argc, char **argv)
             count++;
     }
 
-    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-    *total_count += count;
-    MPI_Win_unlock(0, win);
-
-    MPI_Win_fence(0, win);
-
-    if (world_rank == 0){
-        count = *total_count;
-    }
+    
     
 
-    // if (world_rank == 0)
-    // {
-    //     // Master
-    // }
-    // else
-    // {
-    //     // Workers
-    // }
+    if (world_rank == 0)
+    {
+        long long int *counts = (long long int *)malloc(world_size * sizeof(long long int));
+        for (int i = 0; i < world_size; i++)
+            counts[i] = -1;
+        counts[0] = count;
+        MPI_Alloc_mem(world_size * sizeof(long long int), MPI_INFO_NULL, &counts);
 
+        MPI_Win_create(counts, world_size * sizeof(long long int), sizeof(long long int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
-    MPI_Win_free(&win);
+        bool ready = true;
+
+        do{
+            ready = true;
+            for (int i = 1; i < world_size; i++)
+            {
+                MPI_Win_lock(MPI_LOCK_SHARED, i, 0, win);
+                MPI_Get(&counts[i], 1, MPI_LONG_LONG, i, 0, 1, MPI_LONG_LONG, win);
+                MPI_Win_unlock(i, win);
+                if (counts[i] == -1)
+                {
+                    ready = false;
+                    break;
+                }
+            }
+        } while (!ready);
+
+        long long int global_count = 0;
+        for (int i = 0; i < world_size; i++)
+            global_count += counts[i];
+
+        count = global_count;
+
+        MPI_Win_free(&win);
+        MPI_Free_mem(counts);       
+    }
+    else
+    {
+        MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
+        MPI_Put(&count, 1, MPI_LONG_LONG, 0, 0, 1, MPI_LONG_LONG, win);
+        MPI_Win_unlock(0, win);
+        MPI_Win_free(&win);
+    }
 
     if (world_rank == 0)
     {
         // TODO: handle PI result
-        pi_result = 4.0 / (double)tosses * (double)count;
+        pi_result = 4.0 / (double)tosses * (double)global;
 
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();
