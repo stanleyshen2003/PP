@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // TODO: handle PI result
-        pi_result = 4.0 / (double)tosses * (double)global;
+        pi_result = 4.0 / (double)tosses * (double)count;
 
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();
