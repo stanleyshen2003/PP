@@ -58,13 +58,13 @@ int main(int argc, char **argv)
             for (int i = 1; i < world_size; i++)
             {
                 MPI_Win_lock(MPI_LOCK_SHARED, i, 0, win);
-                MPI_Get(&counts[i], 1, MPI_LONG_LONG, i, 0, 1, MPI_LONG_LONG, win);
-                MPI_Win_unlock(i, win);
                 if (counts[i] == -1)
                 {
                     ready = false;
                     break;
                 }
+                MPI_Win_unlock(i, win);
+                
             }
         } while (!ready);
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     {
         MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-        MPI_Put(&count, 1, MPI_LONG_LONG, 0, 0, 1, MPI_LONG_LONG, win);
+        MPI_Put(&count, 1, MPI_LONG_LONG, 0, world_rank, 1, MPI_LONG_LONG, win);
         MPI_Win_unlock(0, win);
         MPI_Win_free(&win);
     }
