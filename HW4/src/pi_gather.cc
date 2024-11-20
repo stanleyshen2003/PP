@@ -54,7 +54,7 @@ int main(int argc, char **argv)
             global_count += counts[i];
         }
 
-        pi_result = 4.0 / (double)tosses * (double)counts;
+        pi_result = 4.0 / (double)tosses * (double)global_count;
 
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();
