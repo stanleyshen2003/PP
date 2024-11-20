@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         counts = new long long int[world_size];
     }
 
-    MPI_Gather(&count, 1, MPI_LONG_LONG, counts, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+    MPI_Gather(&count, 1, MPI_LONG_LONG, counts, 1, MPI_LONG_LONG, world_rank, MPI_COMM_WORLD);
 
 
     if (world_rank == 0)
