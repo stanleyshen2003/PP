@@ -43,10 +43,8 @@ int main(int argc, char **argv)
 
     if (world_rank == 0)
     {
-        long long int *counts = (long long int *)malloc(world_size * sizeof(long long int));
-        for (int i = 0; i < world_size; i++)
-            counts[i] = -1;
-        counts[0] = count;
+        long long int *counts;
+        
         MPI_Alloc_mem(world_size * sizeof(long long int), MPI_INFO_NULL, &counts);
         for (int i = 0; i < world_size; i++)
             counts[i] = -1;
