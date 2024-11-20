@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     // TODO: use MPI_Gather
     long long int *counts = NULL;
     if (world_rank == 0) {
-        counts = malloc(world_size * sizeof(long long int));
+        counts = new long long int[world_size];
     }
 
     MPI_Gather(&count, 1, MPI_LONG_LONG, counts, 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
         // ---
     }
 
-    free(counts)
+    delete[] counts;
     
     MPI_Finalize();
     return 0;
