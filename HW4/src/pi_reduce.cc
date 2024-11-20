@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // TODO: PI result
-        pi_result = 4.0 / (double)tosses * (double)count;
+        pi_result = 4.0 / (double)tosses * (double)global_count;
 
 
         // --- DON'T TOUCH ---
