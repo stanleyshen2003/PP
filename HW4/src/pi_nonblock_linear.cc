@@ -39,8 +39,7 @@ int main(int argc, char **argv)
     if (world_rank > 0)
     {
         // TODO: MPI workers
-        MPI_Request request;
-        MPI_Isend(&count, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD, request);
+        MPI_Isend(&count, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD, &MPI_REQUEST_NULL);
     }
     else if (world_rank == 0)
     {
