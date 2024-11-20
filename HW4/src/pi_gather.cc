@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         // TODO: PI result
         long long int global_count = 0;
         for (int i = 0; i < world_size; i++) {
-            global_count += all_counts[i];
+            global_count += counts[i];
         }
 
         pi_result = 4.0 / (double)tosses * (double)count;
