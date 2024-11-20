@@ -41,6 +41,7 @@ int main(int argc, char **argv)
         // TODO: MPI workers
         MPI_Request request;
         MPI_Isend(&count, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD, &request);
+        MPI_Wait(&request, MPI_STATUS_IGNORE);
     }
     else if (world_rank == 0)
     {
@@ -73,7 +74,7 @@ int main(int argc, char **argv)
         printf("MPI running time: %lf Seconds\n", end_time - start_time);
         // ---
     }
-
+    free(local_count);
     MPI_Finalize();
     return 0;
 }
