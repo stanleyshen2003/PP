@@ -46,9 +46,10 @@ int main(int argc, char **argv)
         long long int *counts;
         
         MPI_Alloc_mem(world_size * sizeof(long long int), MPI_INFO_NULL, &counts);
-        for (int i = 0; i < world_size; i++)
-            counts[i] = -1;
         counts[0] = count;
+        for (int i = 1; i < world_size; i++)
+            counts[i] = -1;
+        
         MPI_Win_create(counts, world_size * sizeof(long long int), sizeof(long long int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
         bool ready = true;
