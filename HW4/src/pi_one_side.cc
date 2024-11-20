@@ -62,6 +62,7 @@ int main(int argc, char **argv)
                 if (counts[i] == -1)
                 {
                     ready = false;
+                    MPI_Win_unlock(i, win);
                     break;
                 }
                 MPI_Win_unlock(i, win);
