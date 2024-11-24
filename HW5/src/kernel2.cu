@@ -25,7 +25,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
         z_re = x + new_re;
         z_im = y + new_im;
     }
-    *((int*)((void*)d_img + threadY * pitch) + threadX) = i;
+    *((int*)((char*)d_img + threadY * pitch) + threadX) = i;
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
@@ -48,8 +48,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, pinnedImg, resX, pitch, maxIterations);
 
-    cudaMemcpy2D(host_image, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
-    memcpy(img, host_image, size);
+    cudaMemcpy2D(img, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
+    // memcpy(img, host_image, size);
     cudaFree(pinnedImg);
     cudaFreeHost(host_image);
 }
