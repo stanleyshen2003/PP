@@ -3,13 +3,6 @@
 #include <stdlib.h>
 #define N 16
 
-// mandel function in serial.cpp
-__device__ int mandel(float c_re, float c_im, int maxIteration) {
-    
-}
-
-
-
 __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, int resY, int maxIterations){
     // To avoid error caused by the floating number, use the following pseudo code
     //
@@ -25,7 +18,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
     float z_re = x, z_im = y;
     int i;
     float new_re, new_im;
-    for (i = 0; i < maxIteration; ++i) {
+    for (i = 0; i < maxIterations; ++i) {
         new_re = z_re * z_re - z_im * z_im;
         if (new_re > 4.f)
             break;
