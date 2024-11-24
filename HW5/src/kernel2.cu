@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #define N 16
 
-__global__ void mandelKernel (float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, int resY, int maxIterations){
+__global__ void mandelKernel (float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, size_t pitch, int maxIterations){
     // To avoid error caused by the floating number, use the following pseudo code
     //
     // float x = lowerX + thisX * stepX;
@@ -25,7 +25,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
         z_re = x + new_re;
         z_im = y + new_im;
     }
-    d_img[threadY * resX + threadX] = i;
+    *(*((void*)d_imgthreadY + threadY * pitch )+ threadX) = i;
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
@@ -46,7 +46,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     dim3 numBlocks(resX / threadsPerBlock.x, resY / threadsPerBlock.y);
 
     // launch kernel
-    mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, pinnedImg, resX, resY, maxIterations);
+    mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, pinnedImg, resX, pitch, maxIterations);
 
     cudaMemcpy2D(host_image, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
     memcpy(img, host_image, size);
