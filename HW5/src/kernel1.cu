@@ -36,6 +36,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepY = (upperY - lowerY) / resY;
     int size = resX * resY * sizeof(int);
 
+    img = (int*)malloc(size);
     int* ans;
     cudaMalloc((void**)&ans, size);
 
