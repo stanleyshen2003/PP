@@ -11,23 +11,25 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
     int threadX = blockIdx.x * blockDim.x + threadIdx.x * 2;
     int threadY = blockIdx.y * blockDim.y + threadIdx.y;
 
-    float x = lowerX + threadX * stepX;
-    float y = lowerY + threadY * stepY;
+    
 
-    for (int j = 0; j < 2; j++) {
-        x = x + j * stepX;
+    for (int j = 0; j < 2; j++){
+        float x = lowerX + (threadX+j) * stepX;
+        float y = lowerY + threadY * stepY;
         float z_re = x, z_im = y;
         int i;
-        float new_re;
         for (i = 0; i < maxIterations; ++i) {
-            new_re = z_re * z_re - z_im * z_im;
-            if (new_re > 4.f)
+            if (z_re * z_re + z_im * z_im > 4.f)
                 break;
 
-            z_im = y + 2.f * z_re * z_im;
+            float new_re = z_re * z_re - z_im * z_im;
+            float new_im = 2.f * z_re * z_im;
             z_re = x + new_re;
+            z_im = y + new_im;
         }
         *((int*)((char*)d_img + threadY * pitch) + threadX + j) = i;
+
+
     }
 
     
