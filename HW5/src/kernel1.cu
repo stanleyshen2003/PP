@@ -42,8 +42,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
 
     // thread per block and block num
     dim3 threadsPerBlock(N, N);
-    dim3 numBlocks((resX + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (resY + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks(resX / threadsPerBlock.x, resY / threadsPerBlock.y);
 
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, resY, maxIterations);
