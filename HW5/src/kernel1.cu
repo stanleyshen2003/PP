@@ -16,7 +16,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
 
     float z_re = x, z_im = y;
     int i;
-    for (i = 0; i < maxIteration; ++i) {
+    for (i = 0; i < maxIterations; ++i) {
         if (z_re * z_re + z_im * z_im > 4.f)
             break;
 
