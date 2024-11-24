@@ -13,20 +13,19 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
 
     float x = lowerX + threadX * stepX;
     float y = lowerY + threadY * stepY;
-    int index = threadY * resX + threadX;
 
-    float z_re = x, z_im = y;
+    float z_re = c_re, z_im = c_im;
     int i;
-    float new_re, new_im;
-    for (i = 0; i < maxIterations; ++i) {
-        new_re = z_re * z_re - z_im * z_im;
-        if (new_re > 4.f)
+    for (i = 0; i < maxIteration; ++i) {
+        if (z_re * z_re + z_im * z_im > 4.f)
             break;
 
-        z_im = y + 2.f * z_re * z_im;
-        z_re = x + new_re;
+        float new_re = z_re * z_re - z_im * z_im;
+        float new_im = 2.f * z_re * z_im;
+        z_re = c_re + new_re;
+        z_im = c_im + new_im;
     }
-    d_img[index] = i;
+    d_img[threadY * resX + threadX] = i;
     
 }
 
