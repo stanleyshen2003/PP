@@ -15,7 +15,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
     float y = lowerY + threadY * stepY;
 
     for (int j = 0; j < 2; j++) {
-        x = x + j * stepX
+        x = x + j * stepX;
         float z_re = x, z_im = y;
         int i;
         float new_re, new_im;
