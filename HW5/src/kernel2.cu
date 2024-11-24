@@ -3,24 +3,6 @@
 #include <stdlib.h>
 #define N 16
 
-// mandel function in serial.cpp
-__device__ int mandel(float c_re, float c_im, int maxIteration) {
-    float z_re = c_re, z_im = c_im;
-    int i;
-    for (i = 0; i < maxIteration; ++i) {
-        if (z_re * z_re + z_im * z_im > 4.f)
-            break;
-
-        float new_re = z_re * z_re - z_im * z_im;
-        float new_im = 2.f * z_re * z_im;
-        z_re = c_re + new_re;
-        z_im = c_im + new_im;
-    }
-    return i;
-}
-
-
-
 __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, int resY, int maxIterations){
     // To avoid error caused by the floating number, use the following pseudo code
     //
@@ -29,12 +11,21 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
     int threadX = blockIdx.x * blockDim.x + threadIdx.x;
     int threadY = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (threadX < resX && threadY < resY) {
-        float x = lowerX + threadX * stepX;
-        float y = lowerY + threadY * stepY;
-        int index = threadY * resX + threadX;
-        d_img[index] = mandel(x, y, maxIterations);
+    float x = lowerX + threadX * stepX;
+    float y = lowerY + threadY * stepY;
+
+    float z_re = c_re, z_im = c_im;
+    int i;
+    float new_re, new_im;
+    for (i = 0; i < maxIteration; ++i) {
+        new_re = z_re * z_re - z_im * z_im;
+        if (new_re > 4.f)
+            break;
+
+        z_im = c_im + 2.f * z_re * z_im;
+        z_re = c_re + new_re;
     }
+    d_img[threadY * resX + threadX] = i;
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
@@ -43,8 +34,11 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepX = (upperX - lowerX) / resX;
     float stepY = (upperY - lowerY) / resY;
 
-    int* pinnedImg;
-    cudaHostAlloc((void**)&pinnedImg, resX * resY * sizeof(int), cudaHostAllocDefault);
+    int* host_image, *pinnedImg;
+    int size = resX * resY * sizeof(int);
+    size_t pitch;
+    cudaHostAlloc((void**)&host_image, size, cudaHostAllocDefault);
+    cudaMallocPitch((void**)&pinnedImg, &pitch, resX * sizeof(int), resY);
 
 
     // thread per block and block num
@@ -55,6 +49,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, pinnedImg, resX, resY, maxIterations);
 
-    cudaMemcpy(img, pinnedImg, resX * resY * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFreeHost(pinnedImg);
+    cudaMemcpy2D(host_image, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
+    cudaMemcpy(img, pinnedImg, size, cudaMemcpyDeviceToHost);
+    cudaFree(pinnedImg);
+    cudaFreeHost(host_image);
 }
