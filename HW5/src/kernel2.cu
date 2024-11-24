@@ -25,7 +25,7 @@ __global__ void mandelKernel (float lowerX, float lowerY, float stepX, float ste
         z_re = x + new_re;
         z_im = y + new_im;
     }
-    *(*((void*)d_imgthreadY + threadY * pitch )+ threadX) = i;
+    *(*((void*)d_img + threadY * pitch) + threadX) = i;
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
