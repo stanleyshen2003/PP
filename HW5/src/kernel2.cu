@@ -48,7 +48,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, pinnedImg, resX, resY, maxIterations);
 
-    cudaMemcpy2D(img, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
+    cudaMemcpy2D(host_image, resX * sizeof(int), pinnedImg, pitch, resX * sizeof(int), resY, cudaMemcpyDeviceToHost);
+    memcpy(img, host_image, size);
     cudaFree(pinnedImg);
     cudaFreeHost(host_image);
 }
