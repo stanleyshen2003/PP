@@ -36,7 +36,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
 
     int* ans;
 
-    cudaHostRegister(img, imageSize, cudaHostRegisterDefault);
+    cudaHostRegister(img, size, cudaHostRegisterDefault);
     cudaHostGetDevicePointer(&ans, img, 0);
 
     // thread per block and block num
@@ -47,7 +47,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, maxIterations);
 
     cudaDeviceSynchronize();
-    cudaMemcpy(img, ans, size, cudaMemcpyDeviceToHost);
+    // cudaMemcpy(img, ans, size, cudaMemcpyDeviceToHost);
     cudaFree(ans);
     cudaHostUnregister(img);
 }
