@@ -9,7 +9,6 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
     int threadX = blockIdx.x * blockDim.x + threadIdx.x;
     int threadY = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (threadX >= resX || threadY >= resY) return;
 
     float cX = lowerX + threadX * stepX;
     float cY = lowerY + threadY * stepY;
