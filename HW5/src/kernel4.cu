@@ -10,17 +10,20 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
     int threadY = blockIdx.y * blockDim.y + threadIdx.y;
 
 
-    float cX = lowerX + threadX * stepX;
-    float cY = lowerY + threadY * stepY;
+    
+    float2 cXY = make_float2(lowerX + threadX * stepX, lowerY + threadY * stepY);
+    float2 z = cXY;
+    float2 temp;
+    float2 zXY2;
 
-    float zX = cX, zY = cY;
     int i;
     for (i = 0; i < maxIterations; ++i) {
-        float zX2 = zX * zX, zY2 = zY * zY;
-        if (zX2 + zY2 > 4.0f) break;
-
-        zY = 2.0f * zX * zY + cY;
-        zX = zX2 - zY2 + cX;
+        zXY2.x = z.x * z.x;
+        zXY2.y = z.y * z.y;
+        if (zXY2.x + zXY2.y > 4.0f) break;
+        temp.x = zXY2.x - zXY2.y + cXY.x;
+        temp.y = 2.0f * z.x * z.y + cXY.y;
+        z = temp;
     }
 
     d_img[threadY * resX + threadX] = i;
