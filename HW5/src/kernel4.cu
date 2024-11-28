@@ -35,7 +35,9 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     int size = resX * resY * sizeof(int);
 
     int* ans;
-    cudaMalloc((void**)&ans, size);
+
+    cudaHostRegister(img, imageSize, cudaHostRegisterDefault);
+    cudaHostGetDevicePointer(&ans, img, 0);
 
     // thread per block and block num
     dim3 threadsPerBlock(N, N);
@@ -44,6 +46,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, maxIterations);
 
+    cudaDeviceSynchronize();
     cudaMemcpy(img, ans, size, cudaMemcpyDeviceToHost);
     cudaFree(ans);
+    cudaHostUnregister(img);
 }
