@@ -3,31 +3,30 @@
 #include <stdlib.h>
 #define N 16
 
-__global__ void mandelKernel (float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, int resY, int maxIterations){
-    // To avoid error caused by the floating number, use the following pseudo code
-    //
-    // float x = lowerX + thisX * stepX;
-    // float y = lowerY + thisY * stepY;
+#include <cuda_runtime.h>
+
+__global__ void mandelKernel(float lowerX, float lowerY, float stepX, float stepY, int* d_img, int resX, int maxIterations) {
     int threadX = blockIdx.x * blockDim.x + threadIdx.x;
     int threadY = blockIdx.y * blockDim.y + threadIdx.y;
 
-    float x = lowerX + threadX * stepX;
-    float y = lowerY + threadY * stepY;
+    if (threadX >= resX || threadY >= resY) return;
 
-    float z_re = x, z_im = y;
+    float cX = lowerX + threadX * stepX;
+    float cY = lowerY + threadY * stepY;
+
+    float zX = cX, zY = cY;
     int i;
     for (i = 0; i < maxIterations; ++i) {
-        if (z_re * z_re + z_im * z_im > 4.f)
-            break;
+        float zX2 = zX * zX, zY2 = zY * zY;
+        if (zX2 + zY2 > 4.0f) break;
 
-        float new_re = z_re * z_re - z_im * z_im;
-        float new_im = 2.f * z_re * z_im;
-        z_re = x + new_re;
-        z_im = y + new_im;
+        zY = 2.0f * zX * zY + cY;
+        zX = zX2 - zY2 + cX;
     }
+
     d_img[threadY * resX + threadX] = i;
-    
 }
+
 
 // Host front-end function that allocates the memory and launches the GPU kernel
 void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, int resX, int resY, int maxIterations)
@@ -44,7 +43,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     dim3 numBlocks(resX / threadsPerBlock.x, resY / threadsPerBlock.y);
 
     // launch kernel
-    mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, resY, maxIterations);
+    mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, maxIterations);
 
     cudaMemcpy(img, ans, size, cudaMemcpyDeviceToHost);
     cudaFree(ans);
