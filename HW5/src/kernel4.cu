@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define N 16
-#include "CycleTimer.h"
 
 
 #include <cuda_runtime.h>
@@ -48,11 +47,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     dim3 threadsPerBlock(N, N);
     dim3 numBlocks(resX / threadsPerBlock.x, resY / threadsPerBlock.y);
 
-    double startTime = CycleTimer::currentSeconds();
     // launch kernel
     mandelKernel<<<numBlocks, threadsPerBlock>>>(lowerX, lowerY, stepX, stepY, ans, resX, maxIterations);
-    double endTime = CycleTimer::currentSeconds();
-    printf("GPU Time: %.3f ms\n", (endTime - startTime) * 1000);
 
     cudaDeviceSynchronize();
     // cudaMemcpy(img, ans, size, cudaMemcpyDeviceToHost);
