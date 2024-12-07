@@ -18,12 +18,12 @@ __kernel void convolution(
     col_end = max(0, i + halffilterSize - imageWidth - 1);
 
     // from serial implemetnation
-    row_base = (j - halffilterSize + row_start) * imageWidth + i;
-    filter_base = row_start * filterWidth + halffilterSize;
+    int row_base = (j - halffilterSize + row_start) * imageWidth + i;
+    int filter_base = row_start * filterWidth + halffilterSize;
     for (int k = -halffilterSize + row_start; k <= halffilterSize - row_end; k++) {
         for (int l = -halffilterSize + col_start; l <= halffilterSize - col_end; l++) {
 
-            filter_index = filter_base + l;
+            int filter_index = filter_base + l;
 
             if (filter[filter_index])
                 sum += inputImage[row_base + l] * filter[filter_index];
