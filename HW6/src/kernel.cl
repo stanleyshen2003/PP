@@ -24,9 +24,7 @@ __kernel void convolution(
             int col = j + l;
 
             // Check boundaries
-            if (row >= 0 && row < imageHeight && col >= 0 && col < imageWidth) {
-                sum += inputImage[row * imageWidth + col] * filter[(k + halffilterSize) * filterWidth + (l + halffilterSize)];
-            }
+            sum += inputImage[row * imageWidth + col] * filter[(k + halffilterSize) * filterWidth + (l + halffilterSize)];
         }
     }
     outputImage[i * imageWidth + j] = sum;
