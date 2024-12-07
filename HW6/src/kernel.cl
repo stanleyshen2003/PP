@@ -8,6 +8,10 @@ __kernel void convolution(
 {
     int i = get_global_id(0); // Row index
     int j = get_global_id(1); // Column index
+    int localRow = get_local_id(0);  // Local row index
+    int localCol = get_local_id(1);  // Local column index
+
+    int localSize = get_local_size(0); // Assuming square workgroups, this is 8.
 
     int halffilterSize = filterWidth / 2;
     float sum = 0;
@@ -15,8 +19,8 @@ __kernel void convolution(
     // from serial implemetnation
     for (int k = -halffilterSize; k <= halffilterSize; k++) {
         for (int l = -halffilterSize; l <= halffilterSize; l++) {
-            int row = i + k;
-            int col = j + l;
+            int row = i * localSize + localRow + k;
+            int col = j * localSize + localRow + l;
 
             // Check boundaries
             if (row >= 0 && row < imageHeight && col >= 0 && col < imageWidth) {
