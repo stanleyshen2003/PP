@@ -12,20 +12,20 @@ __kernel void convolution(
     float sum = 0;
 
     int row_start, row_end, col_start, col_end;
-    row_start = max(0, (halffilterSize - i));
-    col_start = max(0, (halffilterSize - j));
-    row_end =  max(0, i + halffilterSize - imageWidth - 1);
-    col_end = max(0, j + halffilterSize - imageHeight - 1);
+    row_start = max(0, (halffilterSize - j));
+    col_start = max(0, (halffilterSize - i));
+    row_end =  max(0, j + halffilterSize - imageHeight - 1);
+    col_end = max(0, i + halffilterSize - imageWidth - 1);
 
     // from serial implemetnation
     for (int k = -halffilterSize + row_start; k <= halffilterSize - row_end; k++) {
         for (int l = -halffilterSize + col_start; l <= halffilterSize - col_end; l++) {
-            int row = i + k;
-            int col = j + l;
+            int row = j + k;
+            int col = i + l;
 
             // Check boundaries
             sum += inputImage[row * imageWidth + col] * filter[(k + halffilterSize) * filterWidth + (l + halffilterSize)];
         }
     }
-    outputImage[i * imageWidth + j] = sum;
+    outputImage[j * imageWidth + i] = sum;
 }
