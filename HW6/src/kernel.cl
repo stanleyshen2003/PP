@@ -26,7 +26,7 @@ __kernel void convolution(
             int filter_index = filter_base + l;
 
             if (filter[filter_index])
-                sum += inputImage[row_base + l] * filter[filter_index];
+                sum = mad(inputImage[row_base + l], filter[filter_index], sum);
         }
         row_base += imageWidth;
         filter_base += filterWidth;
