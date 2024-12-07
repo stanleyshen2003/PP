@@ -28,5 +28,5 @@ __kernel void convolution(
             }
         }
     }
-    outputImage[i * imageWidth + j] = sum;
+    outputImage[(i * localSize + localRow) * imageWidth + (j * localSize) + localCol] = sum;
 }
