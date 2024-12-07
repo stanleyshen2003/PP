@@ -11,7 +11,7 @@ __kernel void convolution(
     int localRow = get_local_id(0);  // Local row index
     int localCol = get_local_id(1);  // Local column index
 
-    int localSize = get_local_size(0); // Assuming square workgroups, this is 8.
+    int localSize = get_local_size(0);
 
     int halffilterSize = filterWidth / 2;
     float sum = 0;

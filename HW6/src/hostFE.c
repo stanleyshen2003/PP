@@ -34,7 +34,7 @@ void hostFE(int filterWidth, float *filter, int imageHeight, int imageWidth,
     clSetKernelArg(kernel, 4, sizeof(int), &imageHeight);
     clSetKernelArg(kernel, 5, sizeof(int), &imageWidth);
 
-    size_t globalWorkSize[2] = {imageHeight / localSize, imageWidth / localSize};
+    size_t globalWorkSize[2] = {imageHeight, imageWidth};
     size_t localWorkSize[2] = {localSize, localSize};
 
     // execute kernel
