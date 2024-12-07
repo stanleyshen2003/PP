@@ -14,8 +14,8 @@ __kernel void convolution(
     int row_start, row_end, col_start, col_end;
     row_start = max(0, (halffilterSize - i));
     col_start = max(0, (halffilterSize - j));
-    row_end =  max(0, i + halffilterSize - imageHeight);
-    col_end = max(0, j + halffilterSize - imageWidth);
+    row_end =  max(0, i + halffilterSize - imageWidth - 1);
+    col_end = max(0, j + halffilterSize - imageHeight - 1);
 
     // from serial implemetnation
     for (int k = -halffilterSize + row_start; k <= halffilterSize - row_end; k++) {
