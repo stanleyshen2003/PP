@@ -6,8 +6,8 @@ __kernel void convolution(
 {
     int i = get_global_id(0); // Row index
     int j = get_global_id(1); // Column index
-    int imageHeight = get_global_size(0);
-    int imageWidth = get_global_size(1);
+    int imageHeight = get_global_size(1);
+    int imageWidth = get_global_size(0);
     int halffilterSize = filterWidth / 2;
     float sum = 0;
 
