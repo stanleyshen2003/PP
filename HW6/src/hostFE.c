@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "hostFE.h"
 #include "helper.h"
+#define GROUP_SIZE 8
 
 void hostFE(int filterWidth, float *filter, int imageHeight, int imageWidth,
             float *inputImage, float *outputImage, cl_device_id *device,
@@ -32,9 +33,10 @@ void hostFE(int filterWidth, float *filter, int imageHeight, int imageWidth,
     clSetKernelArg(kernel, 3, sizeof(int), &filterWidth);
 
     size_t globalWorkSize[2] = {imageWidth, imageHeight};
+    size_t localWorkSize[2] = {GROUP_SIZE, GROUP_SIZE};
 
     // execute kernel
-    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, NULL, 0, NULL, NULL);
+    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     
     // create buffer
     clEnqueueReadBuffer(queue, d_outputImage, CL_TRUE, 0, imageHeight * imageWidth * sizeof(float), outputImage, 0, NULL, NULL);
