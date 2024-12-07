@@ -12,8 +12,8 @@ __kernel void convolution(
     float sum = 0;
 
     int row_start, row_end, col_start, col_end;
-    row_start = - max(0, (i - halffilterSize));
-    col_start = - max(0, (j - halffilterSize));
+    row_start = max(0, (halffilterSize - i));
+    col_start = max(0, (halffilterSize - j));
     row_end =  max(0, i + halffilterSize - imageWidth);
     col_end = max(0, j + halffilterSize - imageHeight);
 
