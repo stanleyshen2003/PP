@@ -20,7 +20,7 @@ __kernel void convolution(
     for (int k = -halffilterSize; k <= halffilterSize; k++) {
         for (int l = -halffilterSize; l <= halffilterSize; l++) {
             int row = i * localSize + localRow + k;
-            int col = j * localSize + localRow + l;
+            int col = j * localSize + localCol + l;
 
             // Check boundaries
             if (row >= 0 && row < imageHeight && col >= 0 && col < imageWidth) {
